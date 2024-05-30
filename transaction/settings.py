@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-#^fo=x+son2@z04&g1o!!8%=$!nqy!i**+r-gu7+&peh)l=&eq
 DEBUG = True
 
 ALLOWED_HOSTS = ['tradebook.up.railway.app']
-CSRF_TRUSTED_ORIGINS = ['tradebook.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://tradebook.up.railway.app/']
 
 # Application definition
 
