@@ -1,0 +1,202 @@
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Segmented Data</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #121212;
+            color: #FFFFFF;
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+        h1, h2 {
+            color: #FFFFFF;
+            border-bottom: 2px solid #FFFFFF;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+        th, td {
+            border: 1px solid #FFFFFF;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #0a0a0a;
+        }
+        td {
+            background-color: #000000;
+        }
+        .total-row {
+            background-color: #000000;
+        }
+        .total-row td {
+            font-weight: bold;
+        }
+        button {
+            background-color: #FF5722;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin-right: 10px;
+            display: inline-flex;
+            align-items: center;
+        }
+        button i {
+            margin-right: 5px;
+        }
+        button:hover {
+            background-color: #FF7043;
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination button {
+            background-color: #FF5722;
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        .pagination button:hover {
+            background-color: #FF7043;
+        }
+        @media (max-width: 600px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            th {
+                text-align: right;
+            }
+            tr {
+                border: 1px solid #FFFFFF;
+                margin-bottom: 5px;
+            }
+            td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+            }
+            td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0;
+                width: 50%;
+                padding-left: 8px;
+                white-space: nowrap;
+                text-align: left;
+            }
+        }
+    </style>
+    <script>
+        function paginateTable(tableId, rowsPerPage) {
+            var table = document.getElementById(tableId);
+            var rows = table.getElementsByTagName('tr');
+            var pageCount = Math.ceil((rows.length - 1) / rowsPerPage);
+            var paginationDiv = document.getElementById(tableId + '-pagination');
+
+            function showPage(page) {
+                for (var i = 1; i < rows.length; i++) {
+                    rows[i].style.display = (i > (page - 1) * rowsPerPage && i <= page * rowsPerPage) ? '' : 'none';
+                }
+            }
+
+            for (var i = 1; i <= pageCount; i++) {
+                var button = document.createElement('button');
+                button.innerHTML = i;
+                button.onclick = (function(page) {
+                    return function() {
+                        showPage(page);
+                    };
+                })(i);
+                paginationDiv.appendChild(button);
+            }
+
+            showPage(1);
+        }
+
+        window.onload = function() {
+            paginateTable('buy-table', 10);  // Show 10 rows per page for buy trades
+            paginateTable('sell-table', 10); // Show 10 rows per page for sell trades
+        };
+    </script>
+</head>
+<body>
+    <h1>Segmented Data</h1>
+    <button onclick="window.location.href='{% url 'download_buy_pdf' %}'">
+        <i class="fas fa-file-pdf"></i>Download Buy Trades as PDF
+    </button>
+    <button onclick="window.location.href='{% url 'download_buy_excel' %}'">
+        <i class="fas fa-file-excel"></i>Download Buy Trades as Excel
+    </button>
+    <button onclick="window.location.href='{% url 'download_sell_pdf' %}'">
+        <i class="fas fa-file-pdf"></i>Download Sell Trades as PDF
+    </button>
+    <button onclick="window.location.href='{% url 'download_sell_excel' %}'">
+        <i class="fas fa-file-excel"></i>Download Sell Trades as Excel
+    </button>
+    
+    {% with column_threshold=5 %}
+        {% if headers|length > column_threshold %}
+            <h2>Buy Trades</h2>
+            <table id="buy-table" border="1">
+                <tr>
+                    {% for header in headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+                {% for row in buy_segments %}
+                    <tr>
+                        {% for cell in row %}
+                            <td data-label="{{ headers|slice:forloop.counter0 }}">{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                {% if price_index is not None %}
+                <tr class="total-row">
+                    <td colspan="{{ headers|length|subtract:1 }}">Total Price</td>
+                    <td>{{ buy_total }}</td>
+                </tr>
+                {% endif %}
+            </table>
+            <div id="buy-table-pagination" class="pagination"></div>
+
+            <h2>Sell Trades</h2>
+            <table id="sell-table" border="1">
+                <tr>
+                    {% for header in headers %}
+                        <th>{{ header }}</th>
+                    {% endfor %}
+                </tr>
+                {% for row in sell_segments %}
+                    <tr>
+                        {% for cell in row %}
+                            <td data-label="{{ headers|slice:forloop.counter0 }}">{{ cell }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                {% if price_index is not None %}
+                <tr class="total-row">
+                    <td colspan="{{ headers|length|subtract:1 }}">Total Price</td>
+                    <td>{{ sell_total }}</td>
+                </tr>
+                {% endif %}
+            </table>
+            <div id="sell-table-pagination" class="pagination"></div>
+        {% else %}
+            <p>The number of columns does not exceed the threshold to display the table.</p>
+        {% endif %}
+    {% endwith %}
+</body>
+</html>
