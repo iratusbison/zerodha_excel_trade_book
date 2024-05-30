@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-#^fo=x+son2@z04&g1o!!8%=$!nqy!i**+r-gu7+&peh)l=&eq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['tradebook.up.railway.app']
 
 
 # Application definition
